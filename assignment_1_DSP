@@ -1,0 +1,99 @@
+function [signal_fft_pos_scaled, freq, l] = make_spectrum(signal,fs, ...
+    resolution)
+
+signal=fft(signal);
+l=fs/resolution;
+signal_fft_pos = signal(1:l/2+1);
+signal_fft_pos_scaled=signal_fft_pos/l;
+    
+freq = fs*(0:(l/2))/l;
+  
+end
+
+%1000Hz sinusoid
+fs=48000;
+Ts=0.5;
+f=1000;
+tsin1000 = 0:1/fs:Ts-1/fs;
+sin1000 = sin(2*pi*f*tsin1000);
+
+%iii sound
+[y_i, fs_i] = audioread('iii.wav');
+t_i=0:1/fs_i:length(y_i)/fs_i-1/fs_i;
+
+figure('Name','Sinusoid 1000Hz and iii sound in time domain');
+stem(tsin1000, sin1000, 'red');
+hold on
+stem(t_i, 5*y_i, 'blue')%amplificaton of iii sound
+title('Sinusoid of 1000Hz and iii sound in time domain')
+xlabel('Time s');
+ylabel('Amplitude');
+set(gca,'xtick',0:0.001:2)
+legend('Sin 1000 Hz', 'Rec. iii')
+xlim([0 0.005]);
+
+%print('plot_1_a1', '-dpng', '-r300');
+
+%--------------1000Hz sinusoid spectrum
+fs = 44800; 
+resolution=2;
+
+%number of samples
+N = fs / resolution;  
+
+%time vector and sinusoid
+time_vector = 0:1/fs:(N-1)/fs; 
+f = 1000; 
+sin1000 = sin(2*pi*f*time_vector);
+
+%spectrum
+[Ysin1000, fsin1000,l]=make_spectrum(sin1000, fs,resolution);
+Ysin1000=abs(Ysin1000); %magnitude
+Ysin1000=Ysin1000(1:l/2+1); %positive side
+Ysin1000(2:end-1) = Ysin1000(2:end-1)*1000; %for better view
+
+%---------------- iii spectrum
+%number of samples for 2 Hz resolution
+N = fs_i / resolution;
+
+%shorten
+y_i = y_i(1:N); 
+
+%spectrum
+y_i_fft = fft(y_i);
+y_i_ftt = abs(y_i_fft/N); %magnitude
+y_i_ftt = y_i_ftt(1:N/2+1);%positive side
+y_i_ftt(2:end-1) = 1000*y_i_ftt(2:end-1);%for better view
+
+%freq vector
+f_vector = fs_i*(0:(N/2))/N;
+
+%dB
+y_i_ftt=20*log(y_i_ftt)
+Ysin1000(501)=(20*log(Ysin1000(501)))
+
+%plot
+figure('Name','Spectrum of 1000Hz sin and iii sound')
+stem(f_vector, y_i_ftt, 'blue');
+hold on
+stem(fsin1000, Ysin1000, 'red');
+title('Magnitude spectrum of a 1000Hz sinusoid and and iii reproduced sound');
+xlabel('Frequency Hz');
+ylabel('Magnitude dB');
+legend('Rec. iii', 'Sin 1000 Hz')
+xlim([0 3000]);
+grid on;
+
+print('plot_1_b1', '-dpng', '-r300');
+
+figure('Name','Spectrum of 1000Hz sin and iii sound zoom')
+stem(f_vector, y_i_ftt, 'blue');
+hold on
+stem(fsin1000, Ysin1000, 'red');
+xlabel('Frequency Hz');
+ylabel('Magnitude');
+xlim([700 740]);
+set(gca,'xtick',0:resolution:fs/2)
+grid on;
+
+print('plot_1_b2', '-dpng', '-r300');
